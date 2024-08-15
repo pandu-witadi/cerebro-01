@@ -1,0 +1,3 @@
+rm -rfv ~/.local/share/weaviate/
+
+rm -rfv ~/.cache/weaviate-embedded/
