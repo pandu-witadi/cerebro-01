@@ -4,7 +4,7 @@ const nextConfig = {
 };
 
 // Set assetPrefix only in production/export mode
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NEXT_PUBLIC_NODE_ENV === 'production') {
     nextConfig.assetPrefix = '/static';
 }
 

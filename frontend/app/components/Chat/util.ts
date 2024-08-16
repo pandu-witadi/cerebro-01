@@ -1,7 +1,6 @@
 export const getWebSocketApiHost = () => {
-      if (process.env.NODE_ENV === "development") {
-          // return "ws://localhost:8000/ws/generate_stream";
-          return "ws://117.54.250.85:5154/ws/generate_stream"
+      if (process.env.NEXT_PUBLIC_NODE_ENV === "development") {
+          return `ws://${process.env.NEXT_PUBLIC_SERVER_URL}/ws/generate_stream`
       }
       // If you're serving the app directly through FastAPI, generate the WebSocket URL based on the current location.
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
