@@ -2,20 +2,21 @@
 //
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, {useState, useEffect} from "react"
 import Navbar from "./components/Navigation/NavbarComponent"
 import SettingsComponent from "./components/Settings/SettingsComponent"
 import ChatComponent from "./components/Chat/ChatComponent"
 import DocumentViewerComponent from "./components/Document/DocumentViewerComponent"
 import StatusComponent from "./components/Status/StatusComponent"
-import { Settings, BaseSettings } from "./components/Settings/types"
+import {Settings, BaseSettings} from "./components/Settings/types"
 import RAGComponent from "./components/RAG/RAGComponent"
-import { HealthPayload } from "./components/Status/types"
-import { RAGConfig, RAGResponse } from "./components/RAG/types"
-import { detectHost } from "./api"
-import { GoogleAnalytics } from "@next/third-parties/google"
-import { fonts, FontKey } from "./info"
+import {HealthPayload} from "./components/Status/types"
+import {RAGConfig, RAGResponse} from "./components/RAG/types"
+import {detectHost} from "./api"
+import {GoogleAnalytics} from "@next/third-parties/google"
+import {fonts, FontKey} from "./info"
 import PulseLoader from "react-spinners/PulseLoader"
+import NavBarLayout from "./_components/Navigation/NavBarLayout";
 
 export default function Home() {
     // Page States
@@ -42,7 +43,7 @@ export default function Home() {
             setAPIHost(host)
             if (host) {
                 try {
-                    const health_response = await fetch(host + "/api/health", { method: "GET" })
+                    const health_response = await fetch(host + "/api/health", {method: "GET"})
                     const health_data: HealthPayload = await health_response.json()
 
                     if (health_data) {
@@ -52,7 +53,7 @@ export default function Home() {
                         console.warn("Could not retrieve health data");
                     }
 
-                    const response = await fetch(host + "/api/config", { method: "GET" })
+                    const response = await fetch(host + "/api/config", {method: "GET"})
                     const data: RAGResponse = await response.json()
 
                     if (data) {
@@ -95,13 +96,13 @@ export default function Home() {
             const payload = {
                 config: {
                     RAG: RAGConfig,
-                    SETTING: { selectedTheme: settingTemplate, themes: baseSetting },
+                    SETTING: {selectedTheme: settingTemplate, themes: baseSetting},
                 },
             };
 
             const response = await fetch(APIHost + "/api/set_config", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(payload),
             })
         } catch (error) {
@@ -115,35 +116,39 @@ export default function Home() {
 
     useEffect(() => {
         if (baseSetting) {
-            document.documentElement.style.setProperty( "--primary-verba",      baseSetting[settingTemplate].Customization.settings.primary_color.color )
-            document.documentElement.style.setProperty( "--secondary-verba",    baseSetting[settingTemplate].Customization.settings.secondary_color .color )
-            document.documentElement.style.setProperty( "--warning-verba",      baseSetting[settingTemplate].Customization.settings.warning_color.color )
-            document.documentElement.style.setProperty( "--bg-verba",           baseSetting[settingTemplate].Customization.settings.bg_color.color )
-            document.documentElement.style.setProperty( "--bg-alt-verba",       baseSetting[settingTemplate].Customization.settings.bg_alt_color.color )
-            document.documentElement.style.setProperty( "--text-verba",         baseSetting[settingTemplate].Customization.settings.text_color.color )
-            document.documentElement.style.setProperty( "--text-alt-verba",     baseSetting[settingTemplate].Customization.settings.text_alt_color.color )
-            document.documentElement.style.setProperty( "--button-verba",       baseSetting[settingTemplate].Customization.settings.button_color.color )
-            document.documentElement.style.setProperty( "--button-hover-verba", baseSetting[settingTemplate].Customization.settings.button_hover_color.color )
-            document.documentElement.style.setProperty( "--bg-console-verba",   baseSetting[settingTemplate].Customization.settings.bg_console.color )
-            document.documentElement.style.setProperty( "--text-console-verba", baseSetting[settingTemplate].Customization.settings.text_console.color )
+            document.documentElement.style.setProperty("--primary-verba", baseSetting[settingTemplate].Customization.settings.primary_color.color)
+            document.documentElement.style.setProperty("--secondary-verba", baseSetting[settingTemplate].Customization.settings.secondary_color.color)
+            document.documentElement.style.setProperty("--warning-verba", baseSetting[settingTemplate].Customization.settings.warning_color.color)
+            document.documentElement.style.setProperty("--bg-verba", baseSetting[settingTemplate].Customization.settings.bg_color.color)
+            document.documentElement.style.setProperty("--bg-alt-verba", baseSetting[settingTemplate].Customization.settings.bg_alt_color.color)
+            document.documentElement.style.setProperty("--text-verba", baseSetting[settingTemplate].Customization.settings.text_color.color)
+            document.documentElement.style.setProperty("--text-alt-verba", baseSetting[settingTemplate].Customization.settings.text_alt_color.color)
+            document.documentElement.style.setProperty("--button-verba", baseSetting[settingTemplate].Customization.settings.button_color.color)
+            document.documentElement.style.setProperty("--button-hover-verba", baseSetting[settingTemplate].Customization.settings.button_hover_color.color)
+            document.documentElement.style.setProperty("--bg-console-verba", baseSetting[settingTemplate].Customization.settings.bg_console.color)
+            document.documentElement.style.setProperty("--text-console-verba", baseSetting[settingTemplate].Customization.settings.text_console.color)
         }
     }, [baseSetting, settingTemplate]);
 
     return (
         <main
-            className={`min-h-screen pt-2 pl-5 pr-5 bg-bg-verba text-text-verba ${fontClassName}`}
-            data-theme={ baseSetting ? baseSetting[settingTemplate].Customization.settings.theme : "light" }
+            className={`min-h-screen`}
+            data-theme={'dark'}
+            // data-theme={baseSetting ? baseSetting[settingTemplate].Customization.settings.theme : "light"}
         >
-            {gtag !== "" && <GoogleAnalytics gaId={gtag} />}
+            {gtag !== "" && <GoogleAnalytics gaId={gtag}/>}
 
             {baseSetting ? (
                 <div>
+                    <NavBarLayout imageSrc={baseSetting[settingTemplate].Customization.settings.image.src}
+                                  title={baseSetting[settingTemplate].Customization.settings.title.text}
+                                  subtitle={baseSetting[settingTemplate].Customization.settings.subtitle.text}/>
                     <Navbar
                         APIHost={APIHost}
                         production={production}
-                        title={ baseSetting[settingTemplate].Customization.settings.title.text }
-                        subtitle={baseSetting[settingTemplate].Customization.settings.subtitle.text }
-                        imageSrc={ baseSetting[settingTemplate].Customization.settings.image.src }
+                        title={baseSetting[settingTemplate].Customization.settings.title.text}
+                        subtitle={baseSetting[settingTemplate].Customization.settings.subtitle.text}
+                        imageSrc={baseSetting[settingTemplate].Customization.settings.image.src}
                         version="v1.0.4"
                         currentPage={currentPage}
                         setCurrentPage={setCurrentPage}
@@ -215,10 +220,10 @@ export default function Home() {
                     )}
                 </div>
             ) : (
-                    <div className="flex items-center justify-center h-screen gap-2">
-                        <PulseLoader loading={true} size={12} speedMultiplier={0.75} />
-                        <p>Loading app</p>
-                    </div>
+                <div className="flex items-center justify-center h-screen gap-2">
+                    <PulseLoader loading={true} size={12} speedMultiplier={0.75}/>
+                    <p>Loading app</p>
+                </div>
             )}
             <footer className="footer footer-center p-1 mt-0 bg-bg-verba text-text-alt-verba">
                 <aside>
