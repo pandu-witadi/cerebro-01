@@ -6,7 +6,7 @@ import os
 from wasabi import msg  # type: ignore[import]
 
 config_uuid = "e0adcc12-9bad-4588-8a1e-bab0af6ed485"
-
+WV_SETTING = "WV_SETTING"
 
 def setup_managers(manager):
     msg.info("Setting up components")
@@ -31,6 +31,7 @@ def get_config(manager: VerbaManager) -> dict:
         config = json.loads(document["properties"]["config"])
 
     setting_config = config.get("SETTING", {})
+    wv_setting_config = config.get(WV_SETTING, {})
 
     available_environments = manager.environment_variables
     available_libraries = manager.installed_libraries
@@ -99,6 +100,7 @@ def get_config(manager: VerbaManager) -> dict:
             "Generator": generator_config,
         },
         "SETTING": setting_config,
+        "WV_SETTING": wv_setting_config
     }
 
 
@@ -120,7 +122,22 @@ def set_config(manager: VerbaManager, combined_config: dict):
     if manager.enable_caching != enable_caching:
         msg.info(f"Changing Caching from {manager.enable_caching} to {enable_caching} ")
         manager.enable_caching = enable_caching
-
+    
+    # wv caching
+    wv_selected_theme = combined_config.get(WV_SETTING, {}).get("selectedTheme", "")
+    enable_caching = (
+        combined_config.get(WV_SETTING, {})
+        .get("themes", {})
+        .get(wv_selected_theme, {})
+        .get("Chat", {})
+        .get("settings", {})
+        .get("caching", {})
+        .get("checked", True)
+    )
+    if manager.enable_caching != enable_caching:
+        msg.info(f"Changing Caching from {manager.enable_caching} to {enable_caching} ")
+        manager.enable_caching = enable_caching
+        
     # Set Selected
     manager.reader_manager.set_reader(config.get("Reader", {}).get("selected", ""))
     manager.chunker_manager.set_chunker(config.get("Chunker", {}).get("selected", ""))

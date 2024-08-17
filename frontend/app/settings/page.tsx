@@ -1,35 +1,38 @@
 "use client"
 import React, {useEffect, useState} from "react";
 import NavBarLayout from "../_components/Navigation/NavBarLayout";
-import {FaRegEdit} from "react-icons/fa";
-import {BsInfoCircle} from "react-icons/bs";
 import {MdOutlineBookmarks} from "react-icons/md";
-import { BsTerminal } from "react-icons/bs";
+import {BsTerminal} from "react-icons/bs";
+import {PiPaintBrushHouseholdThin} from "react-icons/pi";
+import {RiChatSettingsLine} from "react-icons/ri";
 import {detectHost} from "@/app/api";
-import {BaseSettings, Settings} from "@/app/_components/Settings/types";
-import ViewConsoleAdmin from "@/app/_components/ConsoleAdmin";
-import {HealthPayload} from "@/app/_components/ConsoleAdmin/types";
-import {RAGConfig, RAGResponse} from "@/app/_components/RAG/types";
+import {BaseSettings, SETTING_DB_KEY, SettingsConfiguration} from "@/app/_components/types/settings";
+import {HealthPayload} from "@/app/_components/types/console";
+import {RAGConfig, RAGResponse} from "@/app/_components/types/rag";
 import Footer from "@/app/_components/Navigation/Footer";
+import ViewConsoleAdmin from "@/app/settings/_view/ViewConsoleAdmin";
+import ViewCustomize from "@/app/settings/_view/ViewCustomize";
 
 const Page = () => {
-    const tabKey = [{title: 'General', icon: <FaRegEdit/>}, {
-        title: 'Workspace',
-        icon: <MdOutlineBookmarks/>
-    }, {title: 'Console Admin', icon: <BsTerminal/>},];
+    const tabKey = [{title: 'Customize', icon: <PiPaintBrushHouseholdThin/>},
+        {title: 'Chat', icon: <RiChatSettingsLine/>},
+        {
+            title: 'Workspace',
+            icon: <MdOutlineBookmarks/>
+        }, {title: 'Admin Console', icon: <BsTerminal/>},];
     const [selectedTab, setSelectedTab] = useState(0);
 
     const [APIHost, setAPIHost] = useState<string | null>(null)
-    const [baseSetting, setBaseSetting] = useState<Settings | null>(null)
+    const [baseSetting, setBaseSetting] = useState<SettingsConfiguration | null>(null)
     const [production, setProduction] = useState(false)
     const [gtag, setGtag] = useState("")
-    const [RAGConfig, setRAGConfig] = useState<RAGConfig | null>(null)
-    const [settingTemplate, setSettingTemplate] = useState("Default")
+    const [RAGConfig, setRAGConfig] = useState<RAGConfig | null>(null);
+    const [syncData, setSyncData] = useState(false);
+    const [currentTheme, setCurrentTheme] = useState("light")
 
     const fetchHost = async () => {
         try {
             const host = await detectHost()
-            console.log(host)
             setAPIHost(host)
             if (host) {
                 try {
@@ -53,12 +56,11 @@ const Page = () => {
                         if (data.data.RAG)
                             setRAGConfig(data.data.RAG)
 
-                        if (data.data.SETTING.themes) {
-                            setBaseSetting(data.data.SETTING.themes);
-                            setSettingTemplate(data.data.SETTING.selectedTheme)
+                        if (data.data[SETTING_DB_KEY].themes) {
+                            setBaseSetting(data.data[SETTING_DB_KEY].themes);
+                            setCurrentTheme(data.data[SETTING_DB_KEY].selectedTheme);
                         } else {
-                            setBaseSetting(BaseSettings)
-                            setSettingTemplate("Default")
+                            setBaseSetting(BaseSettings);
                         }
                     } else {
                         console.warn("Configuration could not be retrieved")
@@ -73,30 +75,42 @@ const Page = () => {
             setAPIHost(null); // Optionally handle the error by setting the state to an empty string or a specific error message
         }
     }
+
+    const importConfig = async () => {
+        if (!APIHost || !baseSetting)
+            return
+
+        try {
+            const theme_ = baseSetting.Custom.settings.theme.value;
+            const payload = {
+                config: {
+                    RAG: RAGConfig,
+                    [SETTING_DB_KEY]: {selectedTheme: theme_, themes: baseSetting},
+                },
+            };
+
+            const response = await fetch(APIHost + "/api/set_config", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload),
+            })
+            setCurrentTheme(theme_);
+        } catch (error) {
+            console.error("Failed to update config:", error);
+        }
+    }
+
     useEffect(() => {
         fetchHost().then();
     }, []);
-    useEffect(() => {
-        if (baseSetting) {
-            document.documentElement.style.setProperty("--primary-verba", baseSetting[settingTemplate].Customization.settings.primary_color.color)
-            document.documentElement.style.setProperty("--secondary-verba", baseSetting[settingTemplate].Customization.settings.secondary_color.color)
-            document.documentElement.style.setProperty("--warning-verba", baseSetting[settingTemplate].Customization.settings.warning_color.color)
-            document.documentElement.style.setProperty("--bg-verba", baseSetting[settingTemplate].Customization.settings.bg_color.color)
-            document.documentElement.style.setProperty("--bg-alt-verba", baseSetting[settingTemplate].Customization.settings.bg_alt_color.color)
-            document.documentElement.style.setProperty("--text-verba", baseSetting[settingTemplate].Customization.settings.text_color.color)
-            document.documentElement.style.setProperty("--text-alt-verba", baseSetting[settingTemplate].Customization.settings.text_alt_color.color)
-            document.documentElement.style.setProperty("--button-verba", baseSetting[settingTemplate].Customization.settings.button_color.color)
-            document.documentElement.style.setProperty("--button-hover-verba", baseSetting[settingTemplate].Customization.settings.button_hover_color.color)
-            document.documentElement.style.setProperty("--bg-console-verba", baseSetting[settingTemplate].Customization.settings.bg_console.color)
-            document.documentElement.style.setProperty("--text-console-verba", baseSetting[settingTemplate].Customization.settings.text_console.color)
-        }
-    }, [baseSetting, settingTemplate]);
 
-    const tab_general = () => {
-        return (<>
-            General
-        </>);
-    }
+    useEffect(() => {
+        if (syncData) {
+            importConfig().then(() => {
+                fetchHost().then(r => setSyncData(false));
+            });
+        }
+    }, [baseSetting]);
 
     const tab_workspace = () => {
         return (<>
@@ -104,49 +118,54 @@ const Page = () => {
         </>);
     }
 
-    const TabView = () => {
+    const TabView = ({base}: { base: SettingsConfiguration }) => {
         if (selectedTab === 0) {
-            return(tab_general());
+            return (<ViewCustomize baseSetting={base} setBaseSetting={setBaseSetting}
+                                   onSyncData={() => setSyncData(true)}/>)
         } else if (selectedTab === 1) {
-            return(tab_workspace());
+            return (tab_workspace());
         } else {
-            if (baseSetting) {
-                return(
-                <ViewConsoleAdmin fetchHost={fetchHost}
-                            settingConfig={baseSetting[settingTemplate]}
-                            APIHost={APIHost}/>);
-            }
+            return (<ViewConsoleAdmin fetchHost={fetchHost} APIHost={APIHost}/>);
         }
     }
 
     return (
-        <div data-theme={'dark'} className={'flex flex-col h-screen overflow-auto'}>
-            <NavBarLayout imageSrc={''}
-                          title={''}
-                          subtitle={''}/>
-            <div className="grid grid-cols-[180px_auto] p-2 flex-grow">
-                <div className="tabs flex flex-col text-xs text-left gap-y-1">
-                    {
-                        tabKey.map((item, index) => (
-                            <div key={item.title} className={'w-full'}>
-                                <button
-                                    className={`w-full justify-start btn ${selectedTab === index ? 'btn-sm btn-active' : 'btn-sm'}`}
-                                    onClick={() => setSelectedTab(index)}
-                                >
-                                    <div className=" self-center mr-2">
-                                        {tabKey[index].icon}
+        <div data-theme={baseSetting ? currentTheme : "light"} className={'flex flex-col h-screen'}>
+            {baseSetting ? (
+                <>
+                    <NavBarLayout imageSrc={baseSetting['Custom'].settings.image.src}
+                                  title={baseSetting['Custom'].settings.title.text}
+                                  subtitle={baseSetting['Custom'].settings.subtitle.text}/>
+                    <div className="grid grid-cols-[200px_auto] p-2 flex-grow  overflow-auto">
+                        <div className="tabs flex flex-col text-xs text-left gap-y-1">
+                            {
+                                tabKey.map((item, index) => (
+                                    <div key={item.title} className={'w-full'}>
+                                        <button
+                                            className={`w-full justify-start btn ${selectedTab === index ? 'btn-sm btn-active' : 'btn-sm'}`}
+                                            onClick={() => setSelectedTab(index)}
+                                        >
+                                            <div className=" self-center mr-2">
+                                                {tabKey[index].icon}
+                                            </div>
+                                            <div className=" self-center">{tabKey[index].title}</div>
+                                        </button>
                                     </div>
-                                    <div className=" self-center">{tabKey[index].title}</div>
-                                </button>
-                            </div>
-                        ))
-                    }
-                </div>
+                                ))
+                            }
+                        </div>
 
-                <div className="overflow-y-auto px-2">
-                    <TabView/>
+                        <div className="px-2">
+                            <TabView base={baseSetting}/>
+                        </div>
+                    </div>
+                </>) : (
+                <div className="flex items-center justify-center h-screen gap-2">
+                    <span className="loading loading-bars loading-lg"></span>
+                    <p>Loading app</p>
                 </div>
-            </div>
+            )}
+
             <Footer/>
         </div>
     )

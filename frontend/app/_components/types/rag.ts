@@ -1,11 +1,11 @@
 import {
   TextFieldSetting,
   NumberFieldSetting,
-  SettingsPayload,
-} from "../Settings/types";
+  SETTING_DB_KEY, SettingsPayload,
+} from "./settings";
 
 export type RAGResponse = {
-  data: { RAG: RAGConfig; SETTING: SettingsPayload };
+  data: { RAG: RAGConfig; [SETTING_DB_KEY]: SettingsPayload };
   error: string;
 };
 

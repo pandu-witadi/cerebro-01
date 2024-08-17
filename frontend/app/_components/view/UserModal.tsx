@@ -10,7 +10,7 @@ interface UserModalComponentProps {
   triggerString?: string;
 }
 
-const UserModalComponent: React.FC<UserModalComponentProps> = ({
+const UserModal: React.FC<UserModalComponentProps> = ({
   title,
   modal_id,
   text,
@@ -27,7 +27,7 @@ const UserModalComponent: React.FC<UserModalComponentProps> = ({
           <form method="dialog">
             {triggerAccept && triggerValue && triggerString && (
               <button
-                className="btn btn-sm btn-primary"
+                className="btn btn-sm btn-success"
                 onClick={() => {
                   triggerAccept(triggerValue);
                 }}
@@ -45,4 +45,4 @@ const UserModalComponent: React.FC<UserModalComponentProps> = ({
   );
 };
 
-export default UserModalComponent;
+export default UserModal;

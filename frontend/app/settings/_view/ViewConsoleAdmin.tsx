@@ -1,21 +1,15 @@
 "use client";
 import React, {useState, useEffect} from "react";
-import {SettingsConfiguration} from "../Settings/types";
 import StatusConsoleComponent from "./StatusConsole";
-import {StatusPayload, Status, SchemaStatus} from "./types";
-import AdminConsoleComponent from "@/app/_components/ConsoleAdmin/AdminConsole";
+import {SchemaStatus, Status, StatusPayload} from "@/app/_components/types/console";
+import ConsoleAdmin from "@/app/settings/_view/ConsoleAdmin";
 
 interface StatusComponentComponentProps {
-    settingConfig: SettingsConfiguration;
     fetchHost: () => void;
     APIHost: string | null;
 }
 
-const ViewConsoleAdmin: React.FC<StatusComponentComponentProps> = ({
-                                                                   APIHost,
-                                                                   settingConfig,
-                                                                   fetchHost,
-                                                               }) => {
+const ViewConsoleAdmin: React.FC<StatusComponentComponentProps> = ({APIHost, fetchHost}) => {
     const [type, setType] = useState<string | null>(null);
     const [connected, setConnected] = useState<"Online" | "Offline">("Offline");
     const [libraries, setLibraries] = useState<Status | null>(null);
@@ -112,9 +106,8 @@ const ViewConsoleAdmin: React.FC<StatusComponentComponentProps> = ({
     return (
         <div className="flex sm:flex-col md:flex-row justify-start items-start gap-3 pb-2">
             <div className="w-full md:w-1/3">
-                <AdminConsoleComponent
+                <ConsoleAdmin
                     reset_verba={reset_verba}
-                    settingConfig={settingConfig}
                     type={type}
                     isFetching={isFetching}
                     connected={connected}

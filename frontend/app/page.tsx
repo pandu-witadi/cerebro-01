@@ -110,9 +110,9 @@ export default function Home() {
         }
     }
 
-    useEffect(() => {
-        importConfig()
-    }, [baseSetting, settingTemplate])
+    // useEffect(() => {
+    //     importConfig()
+    // }, [baseSetting, settingTemplate])
 
     useEffect(() => {
         if (baseSetting) {
