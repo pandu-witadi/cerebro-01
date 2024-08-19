@@ -4,18 +4,17 @@ import NavBarLayout from "../_components/Navigation/NavBarLayout";
 import {MdOutlineBookmarks} from "react-icons/md";
 import {BsTerminal} from "react-icons/bs";
 import {PiPaintBrushHouseholdThin} from "react-icons/pi";
-import {RiChatSettingsLine} from "react-icons/ri";
-import {detectHost} from "@/app/api";
+import {detectHost, getOllamaHost} from "@/app/api";
 import {BaseSettings, SETTING_DB_KEY, SettingsConfiguration} from "@/app/_components/types/settings";
 import {HealthPayload} from "@/app/_components/types/console";
 import {RAGConfig, RAGResponse} from "@/app/_components/types/rag";
 import Footer from "@/app/_components/Navigation/Footer";
 import ViewConsoleAdmin from "@/app/settings/_view/ViewConsoleAdmin";
 import ViewCustomize from "@/app/settings/_view/ViewCustomize";
+import ViewRag from "@/app/settings/_view/ViewRag";
 
 const Page = () => {
     const tabKey = [{title: 'Customize', icon: <PiPaintBrushHouseholdThin/>},
-        {title: 'Chat', icon: <RiChatSettingsLine/>},
         {
             title: 'Workspace',
             icon: <MdOutlineBookmarks/>
@@ -24,11 +23,29 @@ const Page = () => {
 
     const [APIHost, setAPIHost] = useState<string | null>(null)
     const [baseSetting, setBaseSetting] = useState<SettingsConfiguration | null>(null)
-    const [production, setProduction] = useState(false)
-    const [gtag, setGtag] = useState("")
     const [RAGConfig, setRAGConfig] = useState<RAGConfig | null>(null);
     const [syncData, setSyncData] = useState(false);
     const [currentTheme, setCurrentTheme] = useState("light")
+
+    // async function getModelList() {
+    //     const host = await getOllamaHost()
+    //
+    //     // Fetch data
+    //     const resp = await fetch(host + "/api/tags")
+    //     let data_ = await resp.json()
+    //     let results: string[] = ['']
+    //
+    //     // Store results in the results array
+    //     data_['models'].forEach((value: AiModel) => {
+    //         results.push(value.name)
+    //     });
+    //
+    //     if (results === []) {
+    //         results.push('llama3');
+    //     }
+    //
+    //     await fetchHost(results);
+    // }
 
     const fetchHost = async () => {
         try {
@@ -40,8 +57,6 @@ const Page = () => {
                     const health_data: HealthPayload = await health_response.json()
 
                     if (health_data) {
-                        setProduction(health_data.production);
-                        setGtag(health_data.gtag);
                     } else {
                         console.warn("Could not retrieve health data");
                     }
@@ -57,10 +72,13 @@ const Page = () => {
                             setRAGConfig(data.data.RAG)
 
                         if (data.data[SETTING_DB_KEY].themes) {
+                            // data.data[SETTING_DB_KEY].themes.Chat.settings.model.options = models;
                             setBaseSetting(data.data[SETTING_DB_KEY].themes);
                             setCurrentTheme(data.data[SETTING_DB_KEY].selectedTheme);
                         } else {
-                            setBaseSetting(BaseSettings);
+                            let base_ = BaseSettings;
+                            base_.Chat.settings.model.options = models;
+                            setBaseSetting(base_);
                         }
                     } else {
                         console.warn("Configuration could not be retrieved")
@@ -120,10 +138,12 @@ const Page = () => {
 
     const TabView = ({base}: { base: SettingsConfiguration }) => {
         if (selectedTab === 0) {
-            return (<ViewCustomize baseSetting={base} setBaseSetting={setBaseSetting}
-                                   onSyncData={() => setSyncData(true)}/>)
+            return (
+                <ViewCustomize baseSetting={base} setBaseSetting={setBaseSetting}
+                               onSyncData={() => setSyncData(true)}/>
+            )
         } else if (selectedTab === 1) {
-            return (tab_workspace());
+            return (<></>);
         } else {
             return (<ViewConsoleAdmin fetchHost={fetchHost} APIHost={APIHost}/>);
         }
@@ -155,7 +175,7 @@ const Page = () => {
                             }
                         </div>
 
-                        <div className="px-2">
+                        <div className="pl-4 pr-2">
                             <TabView base={baseSetting}/>
                         </div>
                     </div>

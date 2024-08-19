@@ -1,15 +1,17 @@
 import React from "react";
 import {
     CheckboxSetting,
-    ImageFieldSetting, NumberFieldSetting,
+    ImageFieldSetting, KeySettingConfiguration, NumberFieldSetting,
     SelectSetting, SettingsConfiguration,
     TextFieldSetting
 } from "@/app/_components/types/settings";
 import ViewTextField from "@/app/_components/view/ViewTextField";
 import ViewImageField from "@/app/_components/view/ViewImageField";
 import ViewSelectField from "@/app/_components/view/ViewSelectField";
+import ViewCheckField from "@/app/_components/view/ViewCheckField";
+import ViewNumberField from "@/app/_components/view/ViewNumberField";
 
-export function RenderForm(settings: 'Custom', title: any,
+export function RenderForm(settings: KeySettingConfiguration, title: any,
                            setting_type:
                                | TextFieldSetting
                                | ImageFieldSetting
@@ -42,16 +44,16 @@ export function RenderForm(settings: 'Custom', title: any,
                         setSettingsConfig={setCurrentSettingsConfig}
                     />
                 );
-            // case "check":
-            //     return (
-            //         <ViewSelectField
-            //             title={title}
-            //             setting={settings}
-            //             CheckboxSetting={setting_type}
-            //             settingsConfig={currentSettingsConfig}
-            //             setSettingsConfig={setCurrentSettingsConfig}
-            //         />
-            //     );
+            case "check":
+                return (
+                    <ViewCheckField
+                        title={title}
+                        setting={settings}
+                        CheckboxSetting={setting_type}
+                        settingsConfig={currentSettingsConfig}
+                        setSettingsConfig={setCurrentSettingsConfig}
+                    />
+                );
             case "select":
                 return (
                     <ViewSelectField
@@ -62,16 +64,16 @@ export function RenderForm(settings: 'Custom', title: any,
                         setSettingsConfig={setCurrentSettingsConfig}
                     />
                 );
-            // case "number":
-            //     return (
-            //         <NumberFieldComponent
-            //             title={title}
-            //             setting={setting}
-            //             NumberFieldSetting={setting_type}
-            //             settingsConfig={currentSettingsConfig}
-            //             setSettingsConfig={setCurrentSettingsConfig}
-            //         />
-            //     );
+            case "number":
+                return (
+                    <ViewNumberField
+                        title={title}
+                        setting={settings}
+                        NumberFieldSetting={setting_type}
+                        settingsConfig={currentSettingsConfig}
+                        setSettingsConfig={setCurrentSettingsConfig}
+                    />
+                );
             default:
                 return null;
         }

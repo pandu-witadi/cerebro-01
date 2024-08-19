@@ -11,7 +11,8 @@ interface CustomizeProps {
 }
 
 const ViewCustomize: React.FC<CustomizeProps> = ({baseSetting, setBaseSetting, onSyncData}) => {
-    const keyVar = 'Custom';
+    const keyVarCustomization = 'Custom';
+    const keyVarChat = 'Chat';
 
     const [currentSettingsConfig, setCurrentSettingsConfig] =
         useState<SettingsConfiguration>(
@@ -33,37 +34,57 @@ const ViewCustomize: React.FC<CustomizeProps> = ({baseSetting, setBaseSetting, o
             <div className="w-full justify-start items-start gap-3 pb-2">
                 <div className="card shadow-xl p-3 glass">
                     <div className="card-title">
-                        {BaseSettings[keyVar] ? BaseSettings[keyVar].title : ""}
+                        {BaseSettings[keyVarCustomization] ? BaseSettings[keyVarCustomization].title : ""}
                     </div>
-                    <div className={'text-sm'}>{BaseSettings[keyVar] ? BaseSettings[keyVar].description : ""}</div>
+                    <div
+                        className={'text-sm'}>{BaseSettings[keyVarCustomization] ? BaseSettings[keyVarCustomization].description : ""}
+                    </div>
 
                     <div className="flex-coll gap-4 grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-2">
                         {Object.entries(
-                            BaseSettings[keyVar].settings
+                            BaseSettings[keyVarCustomization].settings
                         ).map(([key, settingValue]) =>
                             <div key={key}>
-                                {RenderForm(keyVar, key, settingValue, currentSettingsConfig, setCurrentSettingsConfig)}
+                                {RenderForm(keyVarCustomization, key, settingValue, currentSettingsConfig, setCurrentSettingsConfig)}
                             </div>
                         )}
                     </div>
+                </div>
+            </div>
 
-                    <div className="flex justify-end gap-2 mt-4">
-                        <button
-                            onClick={applyChanges}
-                            className="btn btn-sm btn-success"
-                        >
-                            <FaCheckCircle/>
-                            <p className="">Apply</p>
-                        </button>
-                        <button
-                            onClick={revertChanges}
-                            className="btn btn-sm btn-error"
-                        >
-                            <MdCancel/>
-                            <p className="">Reset</p>
-                        </button>
+            <div className="w-full justify-start items-start gap-3 pb-2">
+                <div className="card shadow-xl p-3 glass">
+                    <div className="card-title">
+                        {BaseSettings[keyVarChat] ? BaseSettings[keyVarChat].title : ""}
+                    </div>
+                    <div className={'text-sm'}>{BaseSettings[keyVarChat] ? BaseSettings[keyVarChat].description : ""}</div>
+
+                    <div className="flex-coll gap-4 grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-2">
+                        {Object.entries(
+                            BaseSettings[keyVarChat].settings
+                        ).map(([key, settingValue]) =>
+                            <div key={key}>
+                                {RenderForm(keyVarChat, key, settingValue, currentSettingsConfig, setCurrentSettingsConfig)}
+                            </div>
+                        )}
                     </div>
                 </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+                <button
+                    onClick={applyChanges}
+                    className="btn btn-sm btn-success"
+                >
+                    <FaCheckCircle/>
+                    <p className="">Apply</p>
+                </button>
+                <button
+                    onClick={revertChanges}
+                    className="btn btn-sm btn-error"
+                >
+                    <MdCancel/>
+                    <p className="">Reset</p>
+                </button>
             </div>
         </>
     );

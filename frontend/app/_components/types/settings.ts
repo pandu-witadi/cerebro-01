@@ -30,6 +30,7 @@ export interface CustomizationSettings extends MetaInformation {
 
 export interface ChatSettings extends MetaInformation {
     settings: {
+        model: SelectSetting;
         caching: CheckboxSetting;
         suggestion: CheckboxSetting;
         info_button: CheckboxSetting;
@@ -107,6 +108,12 @@ const BaseChat: ChatSettings = {
     title: "Chat Settings",
     description: "Customize chat settings like caching generated answers and give the autocomplete suggestions.",
     settings: {
+        model: {
+            value: "llama3",
+            type: "select",
+            options: ['llama3', 'llava:7b'],
+            description: "Select model",
+        },
         caching: {checked: true, type: "check", description: "Enable Caching"},
         suggestion: {
             checked: true,

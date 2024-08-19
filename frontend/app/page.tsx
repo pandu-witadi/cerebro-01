@@ -1,45 +1,28 @@
-//
-//
 "use client"
 
 import React, {useState, useEffect} from "react"
-import Navbar from "./components/Navigation/NavbarComponent"
-import SettingsComponent from "./components/Settings/SettingsComponent"
-import ChatComponent from "./components/Chat/ChatComponent"
-import DocumentViewerComponent from "./components/Document/DocumentViewerComponent"
-import StatusComponent from "./components/Status/StatusComponent"
-import {Settings, BaseSettings} from "./components/Settings/types"
-import RAGComponent from "./components/RAG/RAGComponent"
-import {HealthPayload} from "./components/Status/types"
-import {RAGConfig, RAGResponse} from "./components/RAG/types"
 import {detectHost} from "./api"
-import {GoogleAnalytics} from "@next/third-parties/google"
-import {fonts, FontKey} from "./info"
 import PulseLoader from "react-spinners/PulseLoader"
 import NavBarLayout from "./_components/Navigation/NavBarLayout";
+import {BaseSettings, SETTING_DB_KEY, SettingsConfiguration} from "@/app/_components/types/settings";
+import {HealthPayload} from "@/app/_components/types/console";
+import {RAGResponse, RAGConfig} from "@/app/_components/types/rag";
+import Footer from "@/app/_components/Navigation/Footer";
 
 export default function Home() {
-    // Page States
-    const [currentPage, setCurrentPage] = useState<"CHAT" | "DOCUMENTS" | "STATUS" | "ADD" | "SETTINGS" | "RAG">("CHAT")
-
     const [production, setProduction] = useState(false)
-    const [gtag, setGtag] = useState("")
 
     // Settings
-    const [settingTemplate, setSettingTemplate] = useState("Default")
-    const [baseSetting, setBaseSetting] = useState<Settings | null>(null)
-
-    const fontKey = baseSetting ? (baseSetting[settingTemplate].Customization.settings.font.value as FontKey) : null; // Safely cast if you're sure, or use a check
-    const fontClassName = fontKey ? fonts[fontKey]?.className || "" : ""
+    const [baseSetting, setBaseSetting] = useState<SettingsConfiguration | null>(null)
 
     // RAG Config
     const [RAGConfig, setRAGConfig] = useState<RAGConfig | null>(null)
     const [APIHost, setAPIHost] = useState<string | null>(null)
+    const [currentTheme, setCurrentTheme] = useState("light")
 
     const fetchHost = async () => {
         try {
             const host = await detectHost()
-            console.log(host)
             setAPIHost(host)
             if (host) {
                 try {
@@ -48,7 +31,6 @@ export default function Home() {
 
                     if (health_data) {
                         setProduction(health_data.production);
-                        setGtag(health_data.gtag);
                     } else {
                         console.warn("Could not retrieve health data");
                     }
@@ -63,12 +45,11 @@ export default function Home() {
                         if (data.data.RAG)
                             setRAGConfig(data.data.RAG)
 
-                        if (data.data.SETTING.themes) {
-                            setBaseSetting(data.data.SETTING.themes);
-                            setSettingTemplate(data.data.SETTING.selectedTheme)
+                        if (data.data[SETTING_DB_KEY].themes) {
+                            setBaseSetting(data.data[SETTING_DB_KEY].themes);
+                            setCurrentTheme(data.data[SETTING_DB_KEY].selectedTheme);
                         } else {
-                            setBaseSetting(BaseSettings)
-                            setSettingTemplate("Default")
+                            setBaseSetting(BaseSettings);
                         }
                     } else {
                         console.warn("Configuration could not be retrieved")
@@ -85,7 +66,7 @@ export default function Home() {
     }
 
     useEffect(() => {
-        fetchHost();
+        fetchHost().then();
     }, []);
 
     const importConfig = async () => {
@@ -93,10 +74,11 @@ export default function Home() {
             return
 
         try {
+            const theme_ = baseSetting.Custom.settings.theme.value;
             const payload = {
                 config: {
                     RAG: RAGConfig,
-                    SETTING: {selectedTheme: settingTemplate, themes: baseSetting},
+                    [SETTING_DB_KEY]: {selectedTheme: theme_, themes: baseSetting},
                 },
             };
 
@@ -110,130 +92,88 @@ export default function Home() {
         }
     }
 
-    // useEffect(() => {
-    //     importConfig()
-    // }, [baseSetting, settingTemplate])
-
-    useEffect(() => {
-        if (baseSetting) {
-            document.documentElement.style.setProperty("--primary-verba", baseSetting[settingTemplate].Customization.settings.primary_color.color)
-            document.documentElement.style.setProperty("--secondary-verba", baseSetting[settingTemplate].Customization.settings.secondary_color.color)
-            document.documentElement.style.setProperty("--warning-verba", baseSetting[settingTemplate].Customization.settings.warning_color.color)
-            document.documentElement.style.setProperty("--bg-verba", baseSetting[settingTemplate].Customization.settings.bg_color.color)
-            document.documentElement.style.setProperty("--bg-alt-verba", baseSetting[settingTemplate].Customization.settings.bg_alt_color.color)
-            document.documentElement.style.setProperty("--text-verba", baseSetting[settingTemplate].Customization.settings.text_color.color)
-            document.documentElement.style.setProperty("--text-alt-verba", baseSetting[settingTemplate].Customization.settings.text_alt_color.color)
-            document.documentElement.style.setProperty("--button-verba", baseSetting[settingTemplate].Customization.settings.button_color.color)
-            document.documentElement.style.setProperty("--button-hover-verba", baseSetting[settingTemplate].Customization.settings.button_hover_color.color)
-            document.documentElement.style.setProperty("--bg-console-verba", baseSetting[settingTemplate].Customization.settings.bg_console.color)
-            document.documentElement.style.setProperty("--text-console-verba", baseSetting[settingTemplate].Customization.settings.text_console.color)
-        }
-    }, [baseSetting, settingTemplate]);
-
     return (
-        <main
-            className={`min-h-screen`}
-            data-theme={'dark'}
-            // data-theme={baseSetting ? baseSetting[settingTemplate].Customization.settings.theme : "light"}
-        >
-            {gtag !== "" && <GoogleAnalytics gaId={gtag}/>}
-
+        <div data-theme={baseSetting ? currentTheme : "light"} className={'flex flex-col h-screen'}>
             {baseSetting ? (
-                <div>
-                    <NavBarLayout imageSrc={baseSetting[settingTemplate].Customization.settings.image.src}
-                                  title={baseSetting[settingTemplate].Customization.settings.title.text}
-                                  subtitle={baseSetting[settingTemplate].Customization.settings.subtitle.text}/>
-                    <Navbar
-                        APIHost={APIHost}
-                        production={production}
-                        title={baseSetting[settingTemplate].Customization.settings.title.text}
-                        subtitle={baseSetting[settingTemplate].Customization.settings.subtitle.text}
-                        imageSrc={baseSetting[settingTemplate].Customization.settings.image.src}
-                        version="v1.0.4"
-                        currentPage={currentPage}
-                        setCurrentPage={setCurrentPage}
-                    />
+                <>
+                    <NavBarLayout imageSrc={baseSetting['Custom'].settings.image.src}
+                                  title={baseSetting['Custom'].settings.title.text}
+                                  subtitle={baseSetting['Custom'].settings.subtitle.text}/>
 
-                    {currentPage === "CHAT" && (
-                        <ChatComponent
-                            production={production}
-                            settingConfig={baseSetting[settingTemplate]}
-                            APIHost={APIHost}
-                            RAGConfig={RAGConfig}
-                            setCurrentPage={setCurrentPage}
-                        />
-                    )}
+                    <div className="grid grid-cols-[200px_auto] p-2 flex-grow  overflow-auto">
+                    {/*{currentPage === "CHAT" && (*/}
+                    {/*    <ChatComponent*/}
+                    {/*        production={production}*/}
+                    {/*        settingConfig={baseSetting[settingTemplate]}*/}
+                    {/*        APIHost={APIHost}*/}
+                    {/*        RAGConfig={RAGConfig}*/}
+                    {/*        setCurrentPage={setCurrentPage}*/}
+                    {/*    />*/}
+                    {/*)}*/}
 
-                    {currentPage === "DOCUMENTS" && (
-                        <DocumentViewerComponent
-                            RAGConfig={RAGConfig}
-                            production={production}
-                            setCurrentPage={setCurrentPage}
-                            settingConfig={baseSetting[settingTemplate]}
-                            APIHost={APIHost}
-                        />
-                    )}
+                    {/*{currentPage === "DOCUMENTS" && (*/}
+                    {/*    <DocumentViewerComponent*/}
+                    {/*        RAGConfig={RAGConfig}*/}
+                    {/*        production={production}*/}
+                    {/*        setCurrentPage={setCurrentPage}*/}
+                    {/*        settingConfig={baseSetting[settingTemplate]}*/}
+                    {/*        APIHost={APIHost}*/}
+                    {/*    />*/}
+                    {/*)}*/}
 
-                    {currentPage === "STATUS" && !production && (
-                        <StatusComponent
-                            fetchHost={fetchHost}
-                            settingConfig={baseSetting[settingTemplate]}
-                            APIHost={APIHost}
-                        />
-                    )}
+                    {/*{currentPage === "STATUS" && !production && (*/}
+                    {/*    <StatusComponent*/}
+                    {/*        fetchHost={fetchHost}*/}
+                    {/*        settingConfig={baseSetting[settingTemplate]}*/}
+                    {/*        APIHost={APIHost}*/}
+                    {/*    />*/}
+                    {/*)}*/}
 
-                    {currentPage === "ADD" && !production && (
-                        <RAGComponent
-                            baseSetting={baseSetting}
-                            settingTemplate={settingTemplate}
-                            buttonTitle="Import"
-                            settingConfig={baseSetting[settingTemplate]}
-                            APIHost={APIHost}
-                            RAGConfig={RAGConfig}
-                            setRAGConfig={setRAGConfig}
-                            setCurrentPage={setCurrentPage}
-                            showComponents={["Reader", "Chunker", "Embedder"]}
-                        />
-                    )}
+                    {/*{currentPage === "ADD" && !production && (*/}
+                    {/*    <RAGComponent*/}
+                    {/*        baseSetting={baseSetting}*/}
+                    {/*        settingTemplate={settingTemplate}*/}
+                    {/*        buttonTitle="Import"*/}
+                    {/*        settingConfig={baseSetting[settingTemplate]}*/}
+                    {/*        APIHost={APIHost}*/}
+                    {/*        RAGConfig={RAGConfig}*/}
+                    {/*        setRAGConfig={setRAGConfig}*/}
+                    {/*        setCurrentPage={setCurrentPage}*/}
+                    {/*        showComponents={["Reader", "Chunker", "Embedder"]}*/}
+                    {/*    />*/}
+                    {/*)}*/}
 
-                    {currentPage === "RAG" && !production && (
-                        <RAGComponent
-                            baseSetting={baseSetting}
-                            settingTemplate={settingTemplate}
-                            buttonTitle="Save"
-                            settingConfig={baseSetting[settingTemplate]}
-                            APIHost={APIHost}
-                            RAGConfig={RAGConfig}
-                            setRAGConfig={setRAGConfig}
-                            setCurrentPage={setCurrentPage}
-                            showComponents={["Embedder", "Retriever", "Generator"]}
-                        />
-                    )}
+                    {/*{currentPage === "RAG" && !production && (*/}
+                    {/*    <RAGComponent*/}
+                    {/*        baseSetting={baseSetting}*/}
+                    {/*        settingTemplate={settingTemplate}*/}
+                    {/*        buttonTitle="Save"*/}
+                    {/*        settingConfig={baseSetting[settingTemplate]}*/}
+                    {/*        APIHost={APIHost}*/}
+                    {/*        RAGConfig={RAGConfig}*/}
+                    {/*        setRAGConfig={setRAGConfig}*/}
+                    {/*        setCurrentPage={setCurrentPage}*/}
+                    {/*        showComponents={["Embedder", "Retriever", "Generator"]}*/}
+                    {/*    />*/}
+                    {/*)}*/}
 
-                    {currentPage === "SETTINGS" && !production && (
-                        <SettingsComponent
-                            settingTemplate={settingTemplate}
-                            setSettingTemplate={setSettingTemplate}
-                            baseSetting={baseSetting}
-                            setBaseSetting={setBaseSetting}
-                        />
-                    )}
-                </div>
+                    {/*{currentPage === "SETTINGS" && !production && (*/}
+                    {/*    <SettingsComponent*/}
+                    {/*        settingTemplate={settingTemplate}*/}
+                    {/*        setSettingTemplate={setSettingTemplate}*/}
+                    {/*        baseSetting={baseSetting}*/}
+                    {/*        setBaseSetting={setBaseSetting}*/}
+                    {/*    />*/}
+                    {/*)}*/}
+                    </div>
+                </>
             ) : (
                 <div className="flex items-center justify-center h-screen gap-2">
-                    <PulseLoader loading={true} size={12} speedMultiplier={0.75}/>
+                    <span className="loading loading-bars loading-lg"></span>
                     <p>Loading app</p>
                 </div>
             )}
-            <footer className="footer footer-center p-1 mt-0 bg-bg-verba text-text-alt-verba">
-                <aside>
-                    <p>cerebro © 2024</p>
-                </aside>
-            </footer>
-            {/*<img*/}
-            {/*    referrerPolicy="no-referrer-when-downgrade"*/}
-            {/*    src="https://static.scarf.sh/a.png?x-pxid=ec666e70-aee5-4e87-bc62-0935afae63ac"*/}
-            {/*/>*/}
-        </main>
+            <Footer/>
+        </div>
     );
 }

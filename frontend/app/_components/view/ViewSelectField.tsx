@@ -32,6 +32,7 @@ const ViewSelectField: React.FC<SelectComponentProps> = ({
     });
   };
 
+  console.log(SelectSetting.options)
   return (
     <div key={title} className="flex flex-col gap-1">
       <div className="flex justify-start">

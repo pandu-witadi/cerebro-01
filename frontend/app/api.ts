@@ -21,3 +21,8 @@ export const detectHost = async (): Promise<string> => {
 
     throw new Error("Both health checks failed, please check the Verba Server")
 }
+
+export const getOllamaHost = async (): Promise<string> => {
+    const protocol = window.location.protocol === "https:" ? "https://" : "http://";
+    return (protocol + process.env.NEXT_PUBLIC_OLLAMA);
+}
